@@ -7,6 +7,10 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <uses-permission
+        android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
     <application
         android:name=".utils.App"
         android:allowBackup="true"
@@ -20,14 +24,34 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
-            android:name=".ppt.hundredmtrrace.HundredMeterRaceActivity"
+            android:name=".setting.SettingActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".ppt.hundredmtrrace.HundredMeterRaceActivity"
+            android:name=".crosscountry.AllCrossCountryEventsActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".sprint.race_sprint_activity.HundredMeterRaceActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity> <!-- <activity -->
+        <!-- android:name=".ppt.hundredmtrrace.HundredMeterRaceActivity" -->
+        <!-- android:exported="false"> -->
+        <!-- <meta-data -->
+        <!-- android:name="android.app.lib_name" -->
+        <!-- android:value="" /> -->
+        <!-- </activity> -->
+        <activity
+            android:name=".race_type.attandees_details.AttandeesDetailsActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -125,7 +149,7 @@
                 android:value="" />
         </activity>
         <activity
-            android:name=".bpet.SeventyFiveMeterRace"
+            android:name=".bpet.BPETRACE"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"

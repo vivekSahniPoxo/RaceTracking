@@ -32,6 +32,17 @@
             android:textStyle="bold"
             android:layout_marginStart="32dp"
             android:textSize="16sp"/>
+
+        <ImageView
+            android:id="@+id/blinkingDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ic_green_dot"
+            android:layout_marginEnd="18dp"
+            android:layout_gravity="end|center"
+            android:textSize="38sp"
+            android:visibility="gone"
+            android:textColor="@color/green2" />
     </com.google.android.material.appbar.MaterialToolbar>
 
     <ScrollView
@@ -125,9 +136,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:id="@+id/spcardView"
-                    app:cardElevation="2dp"
                     app:cardCornerRadius="8dp"
-                    app:cardMaxElevation="2dp"
+
                     android:layout_marginStart="12dp"
                     android:layout_marginEnd="12dp"
                     app:cardPreventCornerOverlap="true"
@@ -187,7 +197,7 @@
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_of_item"
                     android:layout_width="match_parent"
-                    android:layout_height="260dp"
+                    android:layout_height="240dp"
                     android:layout_marginStart="18dp"
                     android:layout_marginEnd="18dp"
                     android:layout_marginTop="8dp"
@@ -207,8 +217,8 @@
 
                     app:cardCornerRadius="8dp"
                     app:cardMaxElevation="2dp"
-                    android:layout_marginEnd="18dp"
-                    android:layout_marginStart="18dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
                     app:cardPreventCornerOverlap="true"
                     app:cardUseCompatPadding="true"
                     app:layout_constraintTop_toBottomOf="@+id/list_of_item"
@@ -217,40 +227,195 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
+
                         android:orientation="vertical">
+<!--                        <LinearLayout-->
+<!--                            android:layout_width="match_parent"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:orientation="horizontal">-->
+<!--                            <TextView-->
+<!--                                android:id="@+id/tv_count_heading"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="Total count"-->
+<!--                                android:textColor="@color/black"-->
+<!--                                android:textSize="18sp"-->
+<!--                                android:layout_marginTop="8dp"-->
+<!--                                android:layout_gravity="start"-->
+<!--                                android:visibility="visible"-->
+<!--                                android:layout_marginStart="18dp"-->
+<!--                                android:textStyle="bold"-->
+<!--                                />-->
+
+<!--                            <TextView-->
+<!--                                android:id="@+id/count"-->
+<!--                                android:layout_width="wrap_content"-->
+<!--                                android:layout_height="wrap_content"-->
+<!--                                android:text="0"-->
+<!--                                android:textColor="@color/black"-->
+<!--                                android:textSize="18sp"-->
+<!--                                android:layout_marginTop="8dp"-->
+<!--                                android:layout_gravity="start"-->
+<!--                                android:visibility="visible"-->
+<!--                                android:layout_marginStart="8dp"-->
+<!--                                android:textStyle="bold"-->
+<!--                                />-->
+
+<!--                        </LinearLayout>-->
+
                         <LinearLayout
+                            android:id="@+id/ll1"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal">
-                            <TextView
-                                android:id="@+id/tv_count_heading"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Total count"
-                                android:textColor="@color/black"
-                                android:textSize="18sp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="start"
-                                android:visibility="visible"
-                                android:layout_marginStart="18dp"
-                                android:textStyle="bold"
-                                />
+                            android:layout_marginStart="4dp"
+                            android:layout_marginEnd="4dp"
+                            android:orientation="horizontal"
+                            app:layout_constraintTop_toBottomOf="@+id/list_item"
+                            app:layout_constraintStart_toStartOf="@+id/list_item"
+                            app:layout_constraintEnd_toEndOf="@+id/list_item">
 
-                            <TextView
-                                android:id="@+id/count"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="@color/black"
-                                android:textSize="18sp"
-                                android:layout_marginTop="8dp"
-                                android:layout_gravity="start"
-                                android:visibility="visible"
-                                android:layout_marginStart="8dp"
-                                android:textStyle="bold"
-                                />
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content">
+                                <androidx.cardview.widget.CardView
+                                    android:id="@+id/card_bpet2"
+                                    android:layout_width="100dp"
+                                    android:layout_height="50dp"
+                                    android:layout_marginStart="4dp"
+                                    app:cardCornerRadius="4dp"
+                                    android:backgroundTint="@color/white"
+                                    app:cardElevation="4dp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent">
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical">
 
+
+
+
+                                        <TextView
+                                            android:id="@+id/tv_current_cout"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:text="@string/total_count"
+                                            android:textStyle="bold"
+                                            android:layout_marginTop="8dp"
+                                            android:layout_marginEnd="8dp"
+                                            android:textSize="12sp"
+                                            android:layout_gravity="center"
+                                            android:textColor="@color/Text_color"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:layout_constraintStart_toStartOf="parent"/>
+                                        <TextView
+                                            android:id="@+id/count"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="4dp"
+                                            android:textSize="12sp"
+                                            android:layout_gravity="center"
+                                            android:textColor="@color/Text_color"
+                                            app:layout_constraintTop_toBottomOf="@+id/tv_total_attande_heading"
+                                            app:layout_constraintEnd_toEndOf="@+id/tv_total_attande_heading"
+                                            app:layout_constraintStart_toStartOf="@+id/tv_total_attande_heading"/>
+                                    </LinearLayout>
+
+                                </androidx.cardview.widget.CardView>
+
+                                <androidx.cardview.widget.CardView
+                                    android:id="@+id/card_bpet3"
+                                    android:layout_width="100dp"
+                                    android:layout_height="50dp"
+                                    app:cardCornerRadius="4dp"
+                                    android:layout_marginTop="8dp"
+                                    android:layout_marginStart="4dp"
+                                    android:backgroundTint="@color/white"
+                                    app:cardElevation="4dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/card_bpet2"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/card_bpet2">
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical">
+                                        <TextView
+                                            android:id="@+id/tvpss"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="8dp"
+                                            android:layout_marginEnd="8dp"
+                                            android:layout_marginTop="8dp"
+                                            android:layout_gravity="center"
+                                            android:text="Current Count"
+                                            android:textSize="12sp"
+                                            android:textStyle="bold"
+                                            android:textColor="@color/Text_color"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:layout_constraintStart_toEndOf="@+id/card_bpet2"/>
+                                        <TextView
+                                            android:id="@+id/tv_current_count"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginTop="4dp"
+                                            android:textSize="12sp"
+                                            android:layout_gravity="center"
+                                            android:textColor="@color/Text_color"
+                                            app:layout_constraintTop_toBottomOf="@+id/tv_batch_no_heading"
+                                            app:layout_constraintEnd_toEndOf="@+id/tv_batch_no_heading"
+                                            app:layout_constraintStart_toStartOf="@+id/tv_batch_no_heading"/>
+
+                                    </LinearLayout>
+                                </androidx.cardview.widget.CardView>
+
+                                <androidx.cardview.widget.CardView
+                                    android:layout_width="108dp"
+                                    android:layout_height="50dp"
+                                    app:cardCornerRadius="4dp"
+                                    android:layout_marginTop="8dp"
+                                    android:layout_marginStart="4dp"
+                                    android:layout_marginEnd="4dp"
+                                    android:backgroundTint="@color/white"
+                                    app:cardElevation="4dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/card_bpet2"
+                                    app:layout_constraintTop_toTopOf="parent"
+                                    app:layout_constraintStart_toEndOf="@+id/card_bpet3">
+                                    <LinearLayout
+                                        android:layout_width="match_parent"
+                                        android:layout_height="wrap_content"
+                                        android:orientation="vertical">
+                                        <TextView
+                                            android:id="@+id/currentBatch"
+                                            android:layout_width="match_parent"
+                                            android:layout_height="wrap_content"
+                                            android:layout_marginStart="12dp"
+                                            android:layout_marginEnd="18dp"
+                                            android:layout_marginTop="8dp"
+                                            android:text="Current Batch"
+                                            android:textSize="12sp"
+                                            android:textStyle="bold"
+                                            android:textColor="@color/Text_color"
+                                            app:layout_constraintTop_toTopOf="parent"
+                                            app:layout_constraintStart_toEndOf="@+id/card_bpet2"/>
+
+                                        <TextView
+                                            android:id="@+id/tv_current_batch"
+                                            android:layout_width="wrap_content"
+                                            android:layout_height="wrap_content"
+                                            android:layout_gravity="center"
+                                            android:layout_marginTop="4dp"
+                                            android:textColor="@color/Text_color"
+                                            android:textSize="12sp"
+                                            app:layout_constraintEnd_toEndOf="@+id/tv_batch_no_heading"
+                                            app:layout_constraintStart_toStartOf="@+id/tv_batch_no_heading"
+                                            app:layout_constraintTop_toBottomOf="@+id/tv_batch_no_heading" />
+
+                                    </LinearLayout>
+                                </androidx.cardview.widget.CardView>
+
+                            </androidx.constraintlayout.widget.ConstraintLayout>
                         </LinearLayout>
 
 
@@ -264,7 +429,7 @@
                             android:text="Submit"
                             android:visibility="visible"
                             android:textAllCaps="false"
-                            android:layout_marginBottom="12dp"
+                            android:layout_marginBottom="4dp"
                             android:backgroundTint="@color/soft_green"/>
 
                     </LinearLayout>

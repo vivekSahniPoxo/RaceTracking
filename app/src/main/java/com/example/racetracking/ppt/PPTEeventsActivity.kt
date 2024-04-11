@@ -8,26 +8,34 @@ import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
 import android.view.*
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.core.view.isVisible
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.example.racetracking.Dashboard.HomeActivity
 import com.example.racetracking.R
 import com.example.racetracking.bpet.adapter.TwoPointSevenFiveAdapter
 import com.example.racetracking.bpet.adapter.UpdateMidPointAdapter
-import com.example.racetracking.bpet.datamodel.Rfid
-import com.example.racetracking.bpet.datamodel.SubmitEvent
-import com.example.racetracking.bpet.datamodel.SubmitPPTEvent
-import com.example.racetracking.bpet.datamodel.UpdateMidTimeModelItem
+import com.example.racetracking.bpet.datamodel.*
+import com.example.racetracking.crosscountry.AllCrossCountryEventsActivity
 import com.example.racetracking.databinding.ActivityPpteeventsBinding
+import com.example.racetracking.localdatabase.EventDao
+import com.example.racetracking.localdatabase.EventDataBase
+import com.example.racetracking.race_type.viewModel.RaceTypeViewMode
 import com.example.racetracking.retrofit.RetrofitClient
 import com.example.racetracking.utils.App
 import com.example.racetracking.utils.Cons
@@ -37,6 +45,10 @@ import com.speedata.libuhf.IUHFService
 import com.speedata.libuhf.UHFManager
 import com.speedata.libuhf.bean.SpdInventoryData
 import com.speedata.libuhf.interfaces.OnSpdInventoryListener
+import kotlinx.android.synthetic.main.quite_dialog.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -47,6 +59,7 @@ import java.util.*
 import kotlin.collections.ArrayList
 
 class PPTEeventsActivity : AppCompatActivity() {
+    val processedGroupSet= mutableSetOf<Pair<String, Int>>()
     lateinit var binding:ActivityPpteeventsBinding
     var selected = ""
     var rfidNo = ""
@@ -59,11 +72,16 @@ class PPTEeventsActivity : AppCompatActivity() {
     lateinit var rfidList:ArrayList<Rfid>
     lateinit var tempList:ArrayList<String>
     lateinit var statusList:ArrayList<String>
-    lateinit var twoPointSevenFiveAdapter:TwoPointSevenFiveAdapter
+    lateinit var pptEvents:TwoPointSevenFiveAdapter
     lateinit var progressDialog: ProgressDialog
     lateinit var dialog:Dialog
     private var isDialogShowing = false
     lateinit var submitItem:kotlin.collections.ArrayList<SubmitPPTEvent>
+    var current = arrayListOf<String>()
+  var totalAttend = arrayListOf<String>()
+    var currentBatch = 0
+
+    private val eventsViewModel: RaceTypeViewMode by viewModels()
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,9 +92,13 @@ class PPTEeventsActivity : AppCompatActivity() {
         submitItem = arrayListOf()
         handler = Handler()
         statusList = arrayListOf()
-        twoPointSevenFiveAdapter = TwoPointSevenFiveAdapter(rfidList)
+        pptEvents = TwoPointSevenFiveAdapter(rfidList)
         iuhfService = UHFManager.getUHFService(this)
+        iuhfService.antennaPower = 30
         statusList()
+//       dataBase = EventDataBase.getDatabase(this@PPTEeventsActivity)
+//        eventDao = dataBase.EventDao()
+
 
         binding.imBack.setOnClickListener {
             if (isInventoryRunning==true) {
@@ -129,12 +151,49 @@ class PPTEeventsActivity : AppCompatActivity() {
 
 
         binding.btnSubmit.setOnClickListener {
-            val selectedPosition = binding.spType.selectedItemPosition
-            if (selectedPosition==0){
-                Toast.makeText(this,"Please select status",Toast.LENGTH_SHORT).show()
-            } else if (submitItem.isNotEmpty()){
-                submitEvent(submitItem)
-                //submitItem.add(SubmitPPTEvent(0,"","","",""))
+            if (current.isNotEmpty()) {
+                if (isInventoryRunning == true) {
+                    stopSearching()
+                }
+                val selectedPosition = binding.spType.selectedItemPosition
+                if (selectedPosition == 0) {
+                    Toast.makeText(this, "Please select status", Toast.LENGTH_SHORT).show()
+                } else if (submitItem.isNotEmpty()) {
+
+                    submitItem.forEach {
+                        eventsViewModel.addPPTEventSubmit(
+                            SubmitPPTEventLDB(
+                                0,
+                                it.id,
+                                it.eventId,
+                                it.chestNo,
+                                it.status,
+                                it.date,
+                                receivedBundle?.getString(Cons.GETEVENTFROMAPI).toString()
+                            )
+                        )
+                        //submitItem.add(SubmitPPTEvent(0,it.eventId,it.chestNo,it.status,it.date))
+                        //submitEvent(submitItem)
+                       // getSubmittedPPTChestNumber()
+                    }
+                    currentBatch++
+                    binding.tvCurrentBatch.text = currentBatch.toString()
+                    submitItem.clear()
+//                    tempList.clear()
+                    rfidList.clear()
+                    current.clear()
+                    binding.tvCurrentCount.text = ""
+                    //binding.count.text = ""
+                    val adapter = TwoPointSevenFiveAdapter(rfidList)
+                    binding.listOfItem.adapter = adapter
+
+
+                    adapter.clearData()
+
+                    //twoPointSevenFiveAdapter.notifyDataSetChanged()
+                }
+            }else{
+                Toast.makeText(applicationContext,"No Data Found",Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -183,6 +242,11 @@ class PPTEeventsActivity : AppCompatActivity() {
                     val selectedPosition = binding.spType.selectedItemPosition
                     if (selectedPosition != AdapterView.INVALID_POSITION) {
                         selected = binding.spType.getItemAtPosition(selectedPosition).toString()
+                        //if (tempList.isNotEmpty()){
+                          tempList.clear()
+                        getSubmittedPPTChestNumber()
+                       // }
+
                         Log.d("selected",selected)
                     }
                     //Toast.makeText(this@LoginActivity, "position" + binding.spType.getItemIdAtPosition(position), Toast.LENGTH_SHORT).show()
@@ -195,11 +259,14 @@ class PPTEeventsActivity : AppCompatActivity() {
 
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BUTTON_R2 || keyCode==131) {
         val selectedPosition = binding.spType.selectedItemPosition
         if (selectedPosition==0){
             Snackbar.make(binding.root,"Please select status",Snackbar.LENGTH_SHORT).show()
         } else
         if (!isInventoryRunning) {
+            val dataBase = EventDataBase.getDatabase(this@PPTEeventsActivity)
+            val eventDao = dataBase.EventDao()
             startSearching()
 
             // Start inventory service
@@ -208,55 +275,40 @@ class PPTEeventsActivity : AppCompatActivity() {
                 @SuppressLint("NotifyDataSetChanged")
                 override fun getInventoryData(var1: SpdInventoryData) {
                     try {
-                        val timeMillis = System.currentTimeMillis()
-                        val l: Long = timeMillis - lastTimeMillis
-                        if (l < 100) {
-                            return
-                        }
-                        lastTimeMillis = System.currentTimeMillis()
-                        soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
-                        Log.d("RFFFF", var1.getEpc())
-                        rfidNo = var1.getEpc()
+
+
+                       rfidNo = var1.getEpc().substring(0,4)
+                        //rfidNo = var1.getEpc()
+                       // Log.d("RFEPC", rfidNo)
                         if (rfidNo!=null) {
                             if (!tempList.contains(rfidNo)) {
-                                tempList.add(rfidNo)
-                                rfidList.add(Rfid(tempList.size,var1.getEpc(),""))
-                                rfidNo = rfidNo
-                                val localDateTime = LocalDateTime.now() // Replace with your LocalDateTime object
-                                val formattedDate2 = formatLocalDateTime(localDateTime)
-                                val receivedIntent = intent
-                                val receivedBundle = receivedIntent.extras
-                                if (receivedBundle!=null) {
+                               // Log.d("RFEPC2", rfidNo)
+                                  getDataItemPPT(rfidNo)
 
-                                    submitItem.add(
-                                        SubmitPPTEvent(
-                                            0,
-                                            receivedBundle.getInt(Cons.EVentID),
-                                            rfidNo,
-                                            selected,
-                                            formattedDate2
-                                        )
-                                    )
-                                }
-                                    runOnUiThread {
-                                    binding.listOfItem.postDelayed({
-                                        // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
-                                        binding.listOfItem.scrollToPosition(rfidList.size)
-                                    }, 100)
-                                        binding.count.text = tempList.size.toString()
-
-                                }
-
-
-                                twoPointSevenFiveAdapter.notifyDataSetChanged()
                             }
                         }
 
 
                     } catch (e: Exception) {
-                        Log.d("exception", e.toString())
+                       e.printStackTrace()
                     }
+
+
+                    try{
+                    val timeMillis = System.currentTimeMillis()
+                    val l: Long = timeMillis - lastTimeMillis
+                    if (l < 100) {
+                        return
+                    }
+                    lastTimeMillis = System.currentTimeMillis()
+                    soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
+                    } catch (e:Exception){
+                        Toast.makeText(applicationContext,e.toString(),Toast.LENGTH_SHORT).show()
+                    }
+
                 }
+
+
 
                 override fun onInventoryStatus(p0: Int) {
                     Looper.prepare()
@@ -274,6 +326,7 @@ class PPTEeventsActivity : AppCompatActivity() {
 
         } else {
             stopSearching()
+        }
         }
         return super.onKeyDown(keyCode, event)
     }
@@ -324,6 +377,11 @@ class PPTEeventsActivity : AppCompatActivity() {
         isInventoryRunning = false
         iuhfService.inventoryStop()
         iuhfService.closeDev()
+        runOnUiThread(kotlinx.coroutines.Runnable {
+            val blinkingDot = binding.blinkingDot
+            blinkingDot.clearAnimation()
+            blinkingDot.visibility = View.GONE
+        })
     }
 
 
@@ -332,29 +390,45 @@ class PPTEeventsActivity : AppCompatActivity() {
         isInventoryRunning = true
         initSoundPool()
 
+        runOnUiThread(kotlinx.coroutines.Runnable {
+            binding.blinkingDot.isVisible = true
+
+            val blinkAnimation = AlphaAnimation(1.0f, 0.0f)
+            blinkAnimation.duration = 500 // Adjust the duration as needed
+            blinkAnimation.repeatMode = Animation.REVERSE
+            blinkAnimation.repeatCount = Animation.INFINITE
+
+            // Start the animation
+            binding.blinkingDot.startAnimation(blinkAnimation)
+
+
+            val pptEvents = TwoPointSevenFiveAdapter(rfidList)
+            binding.listOfItem.adapter = pptEvents
+
+        })
+
         try {
             iuhfService = UHFManager.getUHFService(this)
             iuhfService.openDev()
-            iuhfService.antennaPower = 30
+           //iuhfService.antennaPower = 30
+            iuhfService.inventoryStart()
 
-            val twoPointSevenFiveAdapter = TwoPointSevenFiveAdapter(rfidList)
-            binding.listOfItem.adapter = twoPointSevenFiveAdapter
 
         } catch (e:Exception){
             Log.d("Exception",e.toString())
         }
 
-        iuhfService.inventoryStart()
+
     }
 
-    override fun onBackPressed() {
-        //  stopInventoryService()
-        val intent = Intent(this, PActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
-        startActivity(intent)
-       // iuhfService.closeDev()
-       // finish()
-    }
+//    override fun onBackPressed() {
+//        //  stopInventoryService()
+//        val intent = Intent(this, PActivity::class.java)
+//        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+//        startActivity(intent)
+//       // iuhfService.closeDev()
+//       // finish()
+//    }
 
     @RequiresApi(Build.VERSION_CODES.M)
     private fun submitEvent(submitEvent: ArrayList<SubmitPPTEvent>){
@@ -377,11 +451,11 @@ class PPTEeventsActivity : AppCompatActivity() {
                     progressDialog.dismiss()
                     submitItem.clear()
                     tempList.clear()
-                    rfidList.clear()
+                   // rfidList.clear()
                     val adapter = TwoPointSevenFiveAdapter(rfidList)
                     binding.listOfItem.adapter = adapter
                     adapter.clearData()
-                    twoPointSevenFiveAdapter.notifyDataSetChanged()
+                    //twoPointSevenFiveAdapter.notifyDataSetChanged()
                     Toast.makeText(this@PPTEeventsActivity,response.body().toString(), Toast.LENGTH_SHORT).show()
                 } else if (response.code()==404){
                     Snackbar.make(binding.root,response.body().toString(), Snackbar.LENGTH_SHORT).show()
@@ -435,7 +509,7 @@ class PPTEeventsActivity : AppCompatActivity() {
 
 
                         }
-                        twoPointSevenFiveAdapter.notifyItemRemoved(indexToRemove)
+                        //twoPointSevenFiveAdapter.notifyItemRemoved(indexToRemove)
                     } else {
                         // Handle the case where the position is out of bounds
                         binding.count.text = rfidList.size.toString()
@@ -447,4 +521,102 @@ class PPTEeventsActivity : AppCompatActivity() {
         }
     }
 
+
+    override fun onBackPressed() {
+        if (isInventoryRunning) {
+            stopSearching()
+        }
+        val dialogView = layoutInflater.inflate(R.layout.quite_dialog, null)
+        val builder = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+
+        val dialog = builder.create()
+
+        dialogView.btn_yes.setOnClickListener {
+            if (isInventoryRunning) {
+                stopSearching()
+            }
+            val intent = Intent(this, PActivity::class.java)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            dialog.dismiss()
+
+        }
+
+        dialogView.btn_no.setOnClickListener {
+            dialog.dismiss()
+            // Handle any other action you want
+        }
+
+        dialog.show()
+
+    }
+
+
+    @SuppressLint("NotifyDataSetChanged", "SuspiciousIndentation")
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun getDataItemPPT(RfidNo:String){
+
+        val receivedIntent = intent
+        val receivedBundle = receivedIntent.extras
+        val eventID = receivedBundle?.getInt(Cons.EVentID)
+        try {
+          //  val getChestNumber = eventDao.getPPTEventDetails(rfidNo, eventID!!)
+            val groupKey = Pair(RfidNo, eventID)
+            val isSameGroup = processedGroupSet.contains(groupKey)
+            if (!isSameGroup) {
+                rfidList.add(Rfid(tempList.size, rfidNo, ""))
+                current.add(rfidNo)
+                totalAttend.add(rfidNo)
+
+                val localDateTime = LocalDateTime.now()
+                val formattedDate2 = formatLocalDateTime(localDateTime)
+
+                    submitItem.add(SubmitPPTEvent(
+                        0,
+                        receivedBundle!!.getInt(Cons.EVentID),
+                        rfidNo,
+                        selected,
+                        formattedDate2
+                    )
+                    )
+               // }
+                runOnUiThread {
+                    binding.listOfItem.scrollToPosition(current.size)
+
+                    binding.count.text = totalAttend.size.toString()
+                    binding.tvCurrentCount.text = current.size.toString()
+                   // binding.listOfItem.adapter = pptEvents
+
+                }
+                tempList.add(rfidNo)
+               // pptEvents.notifyDataSetChanged()
+
+            }
+        } catch (e:Exception){
+            e.printStackTrace()
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        getSubmittedPPTChestNumber()
+    }
+
+    fun getSubmittedPPTChestNumber(){
+        val database = Room.databaseBuilder(applicationContext, EventDataBase::class.java, "ArmyEventDataBase").build()
+        lifecycleScope.launch {
+            val data = withContext(Dispatchers.IO) {
+                database.EventDao().getAllRaceTypePPTEventDetails()
+            }
+            data.forEach { item->
+                Log.d("items",item.toString())
+                val groupKey = Pair(item.chestNo, item.eventId)
+                processedGroupSet.add(groupKey)
+
+
+            }
+        }
+    }
 }

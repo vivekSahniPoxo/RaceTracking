@@ -1,12 +1,14 @@
-package com.example.racetracking.sprint.hundredmtrrace
+package com.example.racetracking.sprint.race_sprint_activity
 
 import android.annotation.SuppressLint
 import android.app.ProgressDialog
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.AudioManager
+import android.media.MediaPlayer
 import android.media.SoundPool
 import android.os.*
 import android.speech.tts.TextToSpeech
@@ -22,33 +24,26 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import androidx.core.view.isNotEmpty
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.room.Room
 import com.example.racetracking.Dashboard.HomeActivity
 import com.example.racetracking.R
 import com.example.racetracking.sprint.data.SprintDataModel
-import com.example.racetracking.bpet.adapter.UpdateMidPointAdapter
-import com.example.racetracking.bpet.datamodel.AttandeeData
-import com.example.racetracking.bpet.datamodel.CreateSprintResultModelInLocalDb
 import com.example.racetracking.bpet.datamodel.UpdateMidPoint
 import com.example.racetracking.databinding.ActivityHundredMeterRaceBinding
 import com.example.racetracking.localdatabase.EventDataBase
-import com.example.racetracking.ppt.PActivity
-import com.example.racetracking.race_type.RaceTypeActivity
-import com.example.racetracking.race_type.adapter.EventAttandeeAdapter
-import com.example.racetracking.race_type.adapter.RaceTypeAdapter
 import com.example.racetracking.race_type.data.RaceRegsModel
-import com.example.racetracking.race_type.data.RaceTypeDataModel
 import com.example.racetracking.race_type.viewModel.RaceTypeViewMode
 import com.example.racetracking.retrofit.RetrofitClient
 import com.example.racetracking.sprint.adapter.EventSPrintAdapter
 import com.example.racetracking.sprint.adapter.SprintAdapter
 import com.example.racetracking.sprint.data.CreateSprintResultModelItem
-import com.example.racetracking.sprint.data.SprintAttandeeEvenModelClass
 import com.example.racetracking.utils.App
 import com.example.racetracking.utils.Cons
 import com.google.android.material.snackbar.Snackbar
+import com.google.gson.Gson
 import com.speedata.libuhf.IUHFService
 import com.speedata.libuhf.UHFManager
 import com.speedata.libuhf.bean.SpdInventoryData
@@ -58,6 +53,7 @@ import kotlinx.coroutines.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.io.*
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -68,7 +64,10 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 
+
+// Race Sprint activity
 class HundredMeterRaceActivity : AppCompatActivity() {
+    private var mediaPlayer:MediaPlayer?=null
     lateinit var progressDialog: ProgressDialog
     var isInventoryRunning = false
     lateinit var iuhfService: IUHFService
@@ -80,10 +79,12 @@ class HundredMeterRaceActivity : AppCompatActivity() {
     private var soundPool: SoundPool? = null
     var lastTimeMillis: Long = 0
     var rfidNo = ""
+    var isStartTime = ""
     val temp = arrayListOf<String>()
     var sSprintEventId = 0
     var isRaceStart = false
     private var scanningJob: Job? = null
+    val currentAttendees =  arrayListOf<String>()
     private val coroutineScope = CoroutineScope(Dispatchers.Main)
    // lateinit var twoPointSevenFiveAdapter: UpdateMidPointAdapter
     lateinit var binding:ActivityHundredMeterRaceBinding
@@ -98,8 +99,10 @@ class HundredMeterRaceActivity : AppCompatActivity() {
     var localeDateTimePosting = ""
     var textToSpeech: TextToSpeech? = null
     lateinit var eventSPrintAdapter: EventSPrintAdapter
+    var countBatch = 0
     private val sprintRaceViewModel: RaceTypeViewMode by viewModels()
     lateinit var attandeeList:kotlin.collections.ArrayList<RaceRegsModel.RaceRegsModelItem>
+    @SuppressLint("SuspiciousIndentation")
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -152,6 +155,14 @@ class HundredMeterRaceActivity : AppCompatActivity() {
 
 
         binding.btnStartAttendance.setOnClickListener {
+
+
+            clearUIITem()
+
+
+
+            // createSprintResult(postCreateSprintList)
+
 
             if (!isInventoryRunning) {
                 if (binding.spType.selectedItemPosition==0){
@@ -219,9 +230,10 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                     stopSearching()
                 }
 
-                countDownTimer()
+//                countDownTimer()
+                countDownTimerWithRaw(this)
 
-                binding.btnStart.isEnabled = false
+                binding.btnStart.isEnabled = true
                 binding.btnStart.backgroundTintList = ColorStateList.valueOf(Color.GRAY)
                 binding.btnStart.setTextColor(Color.WHITE)
 
@@ -235,10 +247,11 @@ class HundredMeterRaceActivity : AppCompatActivity() {
         binding.btnSubmit.setOnClickListener {
             if (isInventoryRunning==true){
                 stopSearching()
+
             }
             var startTime = ""
             if (postCreateSprintList.isNotEmpty()) {
-
+                val time = formatLocalDateTime(LocalDateTime.now())
                     // Process the postCreateSprintList in a coroutine scope tied to the ViewModel's lifecycle
                     postCreateSprintList.forEach {
                         if (it.starttime.isNotEmpty()) {
@@ -254,6 +267,7 @@ class HundredMeterRaceActivity : AppCompatActivity() {
 //                                    it.starttime
 //                                )
 //                            )
+                            writeToFileExternal("race_sprint${time}.txt",it.rfidNo,it.armyNumber,it.starttime,it.soldiertype,it.raceEventId.toString())
 
 //                            createSprintResult(postCreateSprintList)
 
@@ -277,17 +291,23 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                     }
 
                 if (startTime.isNotEmpty()) {
+//                    var gson = Gson()
+//                    var jsonString = gson.toJson(postCreateSprintList)
+                   // val time = formatLocalDateTime(LocalDateTime.now())
+                   // writeToFileExternalJsonString("race_sprint${time}.txt",jsonString)
                     startTime = ""
-                    createSprintResult(postCreateSprintList)
+//                    createSprintResult(postCreateSprintList)
                     createSprintList.clear()
                     postCreateSprintList.clear()
                     eventSPrintAdapter.clear()
-                    binding.tvTotalAttandee.text = ""
+                    currentAttendees.clear()
+                   // binding.tvTotalAttandee.text = ""
+                    binding.tvCurrentAttandee.text = ""
                     val twoPointSevenFiveAdapter = EventSPrintAdapter(attandeeList)
                     binding.listItem.adapter = twoPointSevenFiveAdapter
 
+
                     // createSprintResult(postCreateSprintList)
-                    // The following code outside the coroutine will run after the coroutine completes
                     binding.btnStart.isEnabled = true
                     binding.spType.isEnabled = true
                     binding.btnStart.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#164B60"))
@@ -472,6 +492,25 @@ class HundredMeterRaceActivity : AppCompatActivity() {
         iuhfService.closeDev()
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun countDownTimerWithRaw(context: Context) {
+        try {
+            mediaPlayer = MediaPlayer.create(context, R.raw.final_audio_file)
+            mediaPlayer?.setOnCompletionListener {
+                // Release the MediaPlayer when playback is completed
+                mediaPlayer?.release()
+                mediaPlayer = null
+            }
+            mediaPlayer?.start()
+
+            handler.postDelayed({
+                onGoSpeechCompleted()
+            },4000)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BUTTON_R2 || keyCode == KeyEvent.KEYCODE_F1) {
             if (!isInventoryRunning) {
@@ -481,6 +520,7 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                     Snackbar.make(binding.root,"Please select race sprint",Snackbar.LENGTH_SHORT).show()
                 } else {
                     startSearching()
+                    clearUIITem()
                 }
 
                 // Start inventory service
@@ -489,182 +529,28 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                     @SuppressLint("NotifyDataSetChanged")
                     override fun getInventoryData(var1: SpdInventoryData) {
                         try {
-                            val timeMillis = System.currentTimeMillis()
-                            val l: Long = timeMillis - lastTimeMillis
-                            if (l < 100) {
-                                return
-                            }
-                            lastTimeMillis = System.currentTimeMillis()
-                            soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
-                            Log.d("RFFFF", var1.getEpc().substring(0,4))
-                            rfidNo = var1.getEpc().substring(0,4)
 
-                            if (rfidNo!=null) {
-                                if (!tempList.contains(rfidNo)) {
-                                    tempList.add(rfidNo)
-                                    try {
-                                        val getChestNumber =
-                                            eventDao.getSprintItemChestNumberAndEventID(
-                                                rfidNo,
-                                                sSprintEventId
-                                            )
-                                        if (getChestNumber == null) {
-                                            createSprintList.add(
-                                                CreateSprintResultModelItem(
-                                                    "Not Available",
-                                                    sSprintEventId,
-                                                    rfidNo,
-                                                    "Not Available",
-                                                    sSprintEventId,
-                                                    ""
-                                                )
-                                            )
-
-                                            rfidNo = var1.getEpc().substring(0,4)
-
-
-                                            val getAttandeeDetails =
-                                                TempAttandeeList.find { it.chestNumber == rfidNo }
-                                            val inputDate = getAttandeeDetails?.dob
-                                            val outputDate =
-                                                inputDate?.let { convertDateFormat(it) }
-                                            attandeeList.add(
-                                                RaceRegsModel.RaceRegsModelItem(
-                                                    getAttandeeDetails!!.active,
-                                                    getAttandeeDetails.ageGroupMaster,
-                                                    getAttandeeDetails.ageGroupValue,
-                                                    getAttandeeDetails.armyNumber,
-                                                    getAttandeeDetails.chestNumber,
-                                                    getAttandeeDetails.company,
-                                                    getAttandeeDetails.companyvalue,
-                                                    getAttandeeDetails.distance,
-                                                    outputDate,
-                                                    getAttandeeDetails.endTime,
-                                                    getAttandeeDetails.gender,
-                                                    getAttandeeDetails.marks,
-                                                    getAttandeeDetails.midPoint,
-                                                    getAttandeeDetails.name,
-                                                    getAttandeeDetails.posting,
-                                                    getAttandeeDetails.raceResultMasterId,
-                                                    getAttandeeDetails.raceTypeMaster,
-                                                    getAttandeeDetails.companyvalue,
-                                                    getAttandeeDetails.rank,
-                                                    getAttandeeDetails.rankValue,
-                                                    getAttandeeDetails.registrationId,
-                                                    getAttandeeDetails.resultCategory,
-                                                    getAttandeeDetails.soldierType,
-                                                    "",
-                                                    getAttandeeDetails.unit,
-                                                    getAttandeeDetails.unitValue
-                                                )
-                                            )
-                                            postCreateSprintList.add(
-                                                CreateSprintResultModelItem(
-                                                    getAttandeeDetails.armyNumber.toString(),
-                                                    sSprintEventId,
-                                                    rfidNo,
-                                                    getAttandeeDetails.soldierType.toString(),
-                                                    sSprintEventId,
-                                                    ""
-                                                )
-                                            )
-                                            runOnUiThread {
-
-                                                binding.listItem.postDelayed({
-                                                    // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
-                                                    binding.listItem.scrollToPosition(attandeeList.size)
-                                                }, 100)
-
-                                                binding.tvTotalAttandee.text =
-                                                    attandeeList.size.toString()
-                                                eventSPrintAdapter.notifyDataSetChanged()
-
-                                            }
-
-                                        } else if (getChestNumber.rfidNo == rfidNo && getChestNumber.raceEventId == sSprintEventId) {
-                                        } else{
-                                            /// rfidList.add(UpdateMidPoint("", rfidNo))
-
-                                            createSprintList.add(
-                                                CreateSprintResultModelItem(
-                                                    "Not Available",
-                                                    sSprintEventId,
-                                                    rfidNo,
-                                                    "Not Available",
-                                                    sSprintEventId,
-                                                    ""
-                                                )
-                                            )
-
-                                            rfidNo = var1.getEpc().substring(0,4)
-
-
-                                            val getAttandeeDetails =
-                                                TempAttandeeList.find { it.chestNumber == rfidNo }
-                                            val inputDate = getAttandeeDetails?.dob
-                                            val outputDate =
-                                                inputDate?.let { convertDateFormat(it) }
-                                            attandeeList.add(
-                                                RaceRegsModel.RaceRegsModelItem(
-                                                    getAttandeeDetails!!.active,
-                                                    getAttandeeDetails.ageGroupMaster,
-                                                    getAttandeeDetails.ageGroupValue,
-                                                    getAttandeeDetails.armyNumber,
-                                                    getAttandeeDetails.chestNumber,
-                                                    getAttandeeDetails.company,
-                                                    getAttandeeDetails.companyvalue,
-                                                    getAttandeeDetails.distance,
-                                                    outputDate,
-                                                    getAttandeeDetails.endTime,
-                                                    getAttandeeDetails.gender,
-                                                    getAttandeeDetails.marks,
-                                                    getAttandeeDetails.midPoint,
-                                                    getAttandeeDetails.name,
-                                                    getAttandeeDetails.posting,
-                                                    getAttandeeDetails.raceResultMasterId,
-                                                    getAttandeeDetails.raceTypeMaster,
-                                                    getAttandeeDetails.companyvalue,
-                                                    getAttandeeDetails.rank,
-                                                    getAttandeeDetails.rankValue,
-                                                    getAttandeeDetails.registrationId,
-                                                    getAttandeeDetails.resultCategory,
-                                                    getAttandeeDetails.soldierType,
-                                                    "",
-                                                    getAttandeeDetails.unit,
-                                                    getAttandeeDetails.unitValue
-                                                )
-                                            )
-                                            postCreateSprintList.add(
-                                                CreateSprintResultModelItem(
-                                                    getAttandeeDetails.armyNumber.toString(),
-                                                    sSprintEventId,
-                                                    rfidNo,
-                                                    getAttandeeDetails.soldierType.toString(),
-                                                    sSprintEventId,
-                                                    ""
-                                                )
-                                            )
-                                            runOnUiThread {
-
-                                                binding.listItem.postDelayed({
-                                                    // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
-                                                    binding.listItem.scrollToPosition(attandeeList.size)
-                                                }, 100)
-
-                                                binding.tvTotalAttandee.text =
-                                                    attandeeList.size.toString()
-
-                                            }
-                                            eventSPrintAdapter.notifyDataSetChanged()
-                                        }
-
-
-
-                                    } catch (e:Exception){
-                                        e.printStackTrace()
-                                    }
-                                }
-                            }
+                            runOnUiThread(Runnable {
+                                handleInventoryData(var1)
+                            })
+//                            val timeMillis = System.currentTimeMillis()
+//                            val l: Long = timeMillis - lastTimeMillis
+//                            if (l < 100) {
+//                                return
+//                            }
+//                            lastTimeMillis = System.currentTimeMillis()
+//                            soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
+//                           // Log.d("RFFFF", var1.getEpc().substring(0,4))
+//                           rfidNo = var1.getEpc()
+//                            if (rfidNo!=null) {
+//                                if (!tempList.contains(rfidNo)) {
+//                                    tempList.add(rfidNo)
+//                                    runOnUiThread(Runnable {
+//                                        handleInventoryData(var1)
+//                                    })
+//
+//                                }
+//                            }
 
 
                         } catch (e: Exception) {
@@ -783,11 +669,13 @@ class HundredMeterRaceActivity : AppCompatActivity() {
 
                 if (response.code()==200){
                     progressDialog.dismiss()
-                    createSprintList.clear()
-                    postCreateSprintList.clear()
-                    eventSPrintAdapter.clear()
-                    val twoPointSevenFiveAdapter = EventSPrintAdapter(attandeeList)
-                    binding.listItem.adapter = twoPointSevenFiveAdapter
+//                    createSprintList.clear()
+//                    postCreateSprintList.clear()
+//                    eventSPrintAdapter.clear()
+                    countBatch++
+                    binding.tvCurrentBatch.text = countBatch.toString()
+//                    val twoPointSevenFiveAdapter = EventSPrintAdapter(attandeeList)
+//                    binding.listItem.adapter = twoPointSevenFiveAdapter
                     //eventSPrintAdapter.notifyDataSetChanged()
                     Toast.makeText(this@HundredMeterRaceActivity,response.body().toString(),Toast.LENGTH_SHORT).show()
 
@@ -814,7 +702,7 @@ class HundredMeterRaceActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.O)
     fun getCurrentTime(): String {
         val currentTime = LocalDateTime.now()
-        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss a")
+        val formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS a")
         return currentTime.format(formatter)
     }
 
@@ -853,17 +741,19 @@ class HundredMeterRaceActivity : AppCompatActivity() {
 
 
     @RequiresApi(Build.VERSION_CODES.O)
+
     private fun countDownTimer() {
         val countdownList = listOf("one", "two", "three", "go")
         val delayMillis = 1000L
+        val mainHandler = Handler(Looper.getMainLooper())
 
         for ((index, countdown) in countdownList.withIndex()) {
-            countdownHandler.postDelayed({
+            mainHandler.postDelayed({
                 textToSpeech?.speak(countdown, TextToSpeech.QUEUE_FLUSH, null, countdown)
 
                 // Delay for a short period before starting the next countdown
                 val nextCountdownDelay = 500L
-                countdownHandler.postDelayed({
+                mainHandler.postDelayed({
                     if (index == countdownList.lastIndex) {
                         onGoSpeechCompleted()
                     }
@@ -910,6 +800,9 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                 val currentDateTime = LocalDateTime.now()
                 localeDateTimeShowing = formatLocalDateTime(currentDateTime)
 
+
+
+
             }
 
 
@@ -940,8 +833,9 @@ class HundredMeterRaceActivity : AppCompatActivity() {
         val twoPointSevenFiveAdapter = EventSPrintAdapter(attandeeList)
         binding.listItem.adapter = twoPointSevenFiveAdapter
         Log.d("postCreateSprintList",postCreateSprintList.toString())
-
+        isStartTime =  localeDateTimePosting
         eventSPrintAdapter.notifyDataSetChanged()
+        createSprintResult(postCreateSprintList)
     }
 
 
@@ -1047,14 +941,10 @@ class HundredMeterRaceActivity : AppCompatActivity() {
         try {
 
 
-            val timeMillis = System.currentTimeMillis()
-            val l: Long = timeMillis - lastTimeMillis
-            if (l < 100) {
-                return
-            }
-            lastTimeMillis = System.currentTimeMillis()
-            soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
+
             rfidNo = var1.getEpc().substring(0,4)
+            Log.d("Epppp",rfidNo)
+           // rfidNo = var1.getEpc()
             if (rfidNo!=null) {
                 if (!tempList.contains(rfidNo)) {
                     tempList.add(rfidNo)
@@ -1073,8 +963,7 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                        // rfidNo = var1.getEpc().substring(0,4)
 
 
-                        val getAttandeeDetails =
-                            TempAttandeeList.find { it.chestNumber == rfidNo }
+                        val getAttandeeDetails = TempAttandeeList.find { it.chestNumber == rfidNo }
                         val inputDate = getAttandeeDetails?.dob
                         val outputDate =
                             inputDate?.let { convertDateFormat(it) }
@@ -1118,20 +1007,22 @@ class HundredMeterRaceActivity : AppCompatActivity() {
                                 ""
                             )
                         )
+                        currentAttendees.add(rfidNo)
                         runOnUiThread {
 
                             binding.listItem.postDelayed({
                                 // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
                                 binding.listItem.scrollToPosition(attandeeList.size)
+
                             }, 100)
 
-                            binding.tvTotalAttandee.text =
-                                attandeeList.size.toString()
-                            eventSPrintAdapter.notifyDataSetChanged()
+
+                            binding.tvTotalAttandee.text = attandeeList.size.toString()
+                            binding.tvCurrentAttandee.text = currentAttendees.size.toString()
 
                         }
 
-
+                        eventSPrintAdapter.notifyDataSetChanged()
 
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -1141,5 +1032,361 @@ class HundredMeterRaceActivity : AppCompatActivity() {
 }catch (e:Exception){
     e.printStackTrace()
 }
+        try{
+        val timeMillis = System.currentTimeMillis()
+        val l: Long = timeMillis - lastTimeMillis
+        if (l < 100) {
+            return
+        }
+        lastTimeMillis = System.currentTimeMillis()
+        soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
+        } catch (e:Exception){
+            e.printStackTrace()
+        }
 }
+
+
+
+    fun writeToFileExternal(
+        fileName: String,
+        rfid: String,
+        armyNo: String,
+        startTime: String,
+        soldierType: String,
+        eventID: String
+    ) {
+        try {
+            val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+            val file = File(externalDir, fileName)
+
+            // Use BufferedWriter for better performance
+            val bufferedWriter = BufferedWriter(FileWriter(file, true))
+
+            // Check if the file is empty, and if so, write the header
+            if (file.length() == 0L) {
+                writeHeader(bufferedWriter)
+            }
+
+            // Write the data
+            bufferedWriter.write(rfid)
+            bufferedWriter.write(" ")
+            bufferedWriter.write(armyNo)
+            bufferedWriter.write(" ")
+            bufferedWriter.write(soldierType)
+            bufferedWriter.write(" ")
+            bufferedWriter.write(startTime)
+            bufferedWriter.write(" ")
+            bufferedWriter.write(eventID)
+            bufferedWriter.newLine()
+            bufferedWriter.flush() // Flush to ensure the data is written immediately
+
+            // Close the writer
+            bufferedWriter.close()
+        } catch (e: IOException) {
+            Log.d("exception", e.toString())
+            e.printStackTrace()
+        }
+    }
+
+    private fun writeHeader(bufferedWriter: BufferedWriter) {
+        try {
+            // Write the header
+            bufferedWriter.write("ChestNo")
+            bufferedWriter.write(" ")
+            bufferedWriter.write("ARMYNO")
+            bufferedWriter.write(" ")
+            bufferedWriter.write("SOLDIER_TYPE")
+            bufferedWriter.write(" ")
+            bufferedWriter.write("START_TIME")
+            bufferedWriter.write(" ")
+            bufferedWriter.write("   EVENT_ID")
+            bufferedWriter.newLine() // Use newLine() for appending a newline
+            bufferedWriter.flush() // Flush to ensure the header is written immediately
+        } catch (e: IOException) {
+            Log.d("exception", e.toString())
+            e.printStackTrace()
+        }
+    }
+
+
+
+//    fun writeToFileExternal(fileName: String, rfid: String,armyNo:String, startTime: String,soldierType:String,eventID:String) {
+//        try {
+//            val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+//            val file = File(externalDir, fileName)
+//
+//            // Use BufferedWriter for better performance
+//            val bufferedWriter = BufferedWriter(FileWriter(file, true))
+//
+//            // No need to check file length for duplicates
+//
+//            // Write the data
+//            bufferedWriter.write(rfid)
+//            bufferedWriter.write(" ")
+//            bufferedWriter.write(armyNo)
+//            bufferedWriter.write(" ")
+//            bufferedWriter.write(soldierType)
+//            bufferedWriter.write("")
+//            bufferedWriter.write(eventID)
+//            bufferedWriter.write("")
+//
+//            bufferedWriter.write(startTime)
+//            bufferedWriter.write("")
+//            bufferedWriter.newLine() // Use newLine() for appending a newline
+//            bufferedWriter.flush() // Flush to ensure the data is written immediately
+//
+//            // Close the writer
+//            bufferedWriter.close()
+//        } catch (e: Exception) {
+//            Log.d("exception", e.toString())
+//            e.printStackTrace()
+//        }
+//    }
+
+
+    fun writeToFileExternalJsonString(fileName: String, data: String) {
+        try {
+
+            val state = Environment.getExternalStorageState()
+            if (Environment.MEDIA_MOUNTED != state) {
+                Log.d("writeToFileExternal", "External storage is not available")
+                return
+            }
+
+            val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+            val file = File(externalDir, fileName)
+
+            val fileOutputStream = FileOutputStream(file, true)
+            val outputStreamWriter = OutputStreamWriter(fileOutputStream)
+
+            // Append a newline character before adding new content
+            if (file.length() > 0) {
+                outputStreamWriter.append('\n')
+            }
+
+
+            outputStreamWriter.write(data)
+            fun writeToFileExternal(fileName: String, data: String) {
+                try {
+
+                    val state = Environment.getExternalStorageState()
+                    if (Environment.MEDIA_MOUNTED != state) {
+                        Log.d("writeToFileExternal", "External storage is not available")
+                        return
+                    }
+
+                    val externalDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+                    val file = File(externalDir, fileName)
+
+                    val fileOutputStream = FileOutputStream(file, true)
+                    val outputStreamWriter = OutputStreamWriter(fileOutputStream)
+
+                    // Append a newline character before adding new content
+                    if (file.length() > 0) {
+                        outputStreamWriter.append('\n')
+                    }
+
+                    outputStreamWriter.write(data)
+                    outputStreamWriter.write(" ")
+                    outputStreamWriter.close()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+            outputStreamWriter.close()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+
+    fun clearUIITem(){
+        if (isStartTime.isNotEmpty() && binding.btnStartAttendance.text == Cons.STARTATTENDANCE){
+            //
+            //if (binding.listItem.isNotEmpty() &&  binding.btnStartAttendance.text == Cons.STARTATTENDANCE && isStartTime.isNotEmpty() ){
+            createSprintList.clear()
+            postCreateSprintList.clear()
+            eventSPrintAdapter.clear()
+            currentAttendees.clear()
+            binding.tvCurrentAttandee.text = ""
+            val twoPointSevenFiveAdapter = EventSPrintAdapter(attandeeList)
+            binding.listItem.adapter = twoPointSevenFiveAdapter
+            binding.btnStart.isEnabled = true
+            binding.spType.isEnabled = true
+            binding.btnStart.setBackgroundColor(ContextCompat.getColor(this, R.color.forest_green))
+            //binding.btnStart.backgroundTintList = ColorStateList.valueOf(Color.parseColor("#164B60"))
+            binding.btnStart.setTextColor(Color.WHITE)
+        } else{
+            //  Toast.makeText(applicationContext,"Please start race",Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+//    fun callInOnKeyDown(){
+//        try {
+//            val getChestNumber =
+//                eventDao.getSprintItemChestNumberAndEventID(
+//                    rfidNo,
+//                    sSprintEventId
+//                )
+//            if (getChestNumber == null) {
+//                createSprintList.add(
+//                    CreateSprintResultModelItem(
+//                        "Not Available",
+//                        sSprintEventId,
+//                        rfidNo,
+//                        "Not Available",
+//                        sSprintEventId,
+//                        ""
+//                    )
+//                )
+//
+//                //  rfidNo = var1.getEpc()
+//
+//
+//                val getAttandeeDetails =
+//                    TempAttandeeList.find { it.chestNumber == rfidNo }
+//                val inputDate = getAttandeeDetails?.dob
+//                val outputDate =
+//                    inputDate?.let { convertDateFormat(it) }
+//                attandeeList.add(
+//                    RaceRegsModel.RaceRegsModelItem(
+//                        getAttandeeDetails!!.active,
+//                        getAttandeeDetails.ageGroupMaster,
+//                        getAttandeeDetails.ageGroupValue,
+//                        getAttandeeDetails.armyNumber,
+//                        getAttandeeDetails.chestNumber,
+//                        getAttandeeDetails.company,
+//                        getAttandeeDetails.companyvalue,
+//                        getAttandeeDetails.distance,
+//                        outputDate,
+//                        getAttandeeDetails.endTime,
+//                        getAttandeeDetails.gender,
+//                        getAttandeeDetails.marks,
+//                        getAttandeeDetails.midPoint,
+//                        getAttandeeDetails.name,
+//                        getAttandeeDetails.posting,
+//                        getAttandeeDetails.raceResultMasterId,
+//                        getAttandeeDetails.raceTypeMaster,
+//                        getAttandeeDetails.companyvalue,
+//                        getAttandeeDetails.rank,
+//                        getAttandeeDetails.rankValue,
+//                        getAttandeeDetails.registrationId,
+//                        getAttandeeDetails.resultCategory,
+//                        getAttandeeDetails.soldierType,
+//                        "",
+//                        getAttandeeDetails.unit,
+//                        getAttandeeDetails.unitValue
+//                    )
+//                )
+//                postCreateSprintList.add(
+//                    CreateSprintResultModelItem(
+//                        getAttandeeDetails.armyNumber.toString(),
+//                        sSprintEventId,
+//                        rfidNo,
+//                        getAttandeeDetails.soldierType.toString(),
+//                        sSprintEventId,
+//                        ""
+//                    )
+//                )
+//                //for getting current Attendees
+//                currentAttendees.add(rfidNo)
+//                Log.d("currentAttendeeSize",currentAttendees.size.toString())
+//                runOnUiThread {
+//
+//                    binding.listItem.postDelayed({
+//                        // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
+//                        binding.listItem.scrollToPosition(attandeeList.size)
+//                    }, 100)
+//
+//                    binding.tvTotalAttandee.text = attandeeList.size.toString()
+//                    binding.tvCurrentAttandee.text = currentAttendees.size.toString()
+//
+//                }
+//                eventSPrintAdapter.notifyDataSetChanged()
+//
+//            } else if (getChestNumber.rfidNo == rfidNo && getChestNumber.raceEventId == sSprintEventId) {
+//            } else{
+//                /// rfidList.add(UpdateMidPoint("", rfidNo))
+//
+//                createSprintList.add(
+//                    CreateSprintResultModelItem(
+//                        "Not Available",
+//                        sSprintEventId,
+//                        rfidNo,
+//                        "Not Available",
+//                        sSprintEventId,
+//                        ""
+//                    )
+//                )
+//
+//                //rfidNo = var1.getEpc()
+//
+//
+//                val getAttandeeDetails =
+//                    TempAttandeeList.find { it.chestNumber == rfidNo }
+//                val inputDate = getAttandeeDetails?.dob
+//                val outputDate =
+//                    inputDate?.let { convertDateFormat(it) }
+//                attandeeList.add(
+//                    RaceRegsModel.RaceRegsModelItem(
+//                        getAttandeeDetails!!.active,
+//                        getAttandeeDetails.ageGroupMaster,
+//                        getAttandeeDetails.ageGroupValue,
+//                        getAttandeeDetails.armyNumber,
+//                        getAttandeeDetails.chestNumber,
+//                        getAttandeeDetails.company,
+//                        getAttandeeDetails.companyvalue,
+//                        getAttandeeDetails.distance,
+//                        outputDate,
+//                        getAttandeeDetails.endTime,
+//                        getAttandeeDetails.gender,
+//                        getAttandeeDetails.marks,
+//                        getAttandeeDetails.midPoint,
+//                        getAttandeeDetails.name,
+//                        getAttandeeDetails.posting,
+//                        getAttandeeDetails.raceResultMasterId,
+//                        getAttandeeDetails.raceTypeMaster,
+//                        getAttandeeDetails.companyvalue,
+//                        getAttandeeDetails.rank,
+//                        getAttandeeDetails.rankValue,
+//                        getAttandeeDetails.registrationId,
+//                        getAttandeeDetails.resultCategory,
+//                        getAttandeeDetails.soldierType,
+//                        "",
+//                        getAttandeeDetails.unit,
+//                        getAttandeeDetails.unitValue
+//                    )
+//                )
+//                postCreateSprintList.add(
+//                    CreateSprintResultModelItem(
+//                        getAttandeeDetails.armyNumber.toString(),
+//                        sSprintEventId,
+//                        rfidNo,
+//                        getAttandeeDetails.soldierType.toString(),
+//                        sSprintEventId,
+//                        ""
+//                    )
+//                )
+//                runOnUiThread {
+//
+//                    binding.listItem.postDelayed({
+//                        // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
+//                        binding.listItem.scrollToPosition(attandeeList.size)
+//                    }, 100)
+//
+//                    binding.tvTotalAttandee.text = attandeeList.size.toString()
+//                    binding.tvCurrentAttandee.text = currentAttendees.size.toString()
+//
+//                }
+//                eventSPrintAdapter.notifyDataSetChanged()
+//            }
+//
+//
+//
+//        } catch (e:Exception){
+//            e.printStackTrace()
+//        }
+//    }
+
 }

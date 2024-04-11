@@ -30,6 +30,18 @@
             android:textStyle="bold"
             android:layout_marginStart="32dp"
             android:textSize="16sp"/>
+
+        <ImageView
+            android:id="@+id/blinkingDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="•"
+            android:background="@drawable/ic_green_dot"
+            android:layout_marginEnd="18dp"
+            android:layout_gravity="end|center"
+            android:textSize="38sp"
+            android:visibility="gone"
+            android:textColor="@color/green2" />
     </com.google.android.material.appbar.MaterialToolbar>
 
     <ScrollView

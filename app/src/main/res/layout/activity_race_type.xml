@@ -33,16 +33,28 @@
             android:layout_marginStart="32dp"
             android:textSize="16sp"/>
 
-        <TextView
+        <ImageView
             android:id="@+id/blinkingDot"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="•"
+            android:background="@drawable/ic_green_dot"
             android:layout_marginEnd="18dp"
             android:layout_gravity="end|center"
             android:textSize="38sp"
             android:visibility="gone"
             android:textColor="@color/green2" />
+
+        <TextView
+            android:id="@+id/count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Inventory"
+            android:visibility="visible"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_marginStart="32dp"
+            android:textSize="16sp"/>
 
     </com.google.android.material.appbar.MaterialToolbar>
 
@@ -89,7 +101,7 @@
 
         <Spinner
             android:id="@+id/spType"
-            android:layout_width="200dp"
+            android:layout_width="160dp"
             android:layout_height="48dp"
             android:background="@drawable/spinner_bg"
             app:layout_constraintEnd_toEndOf="parent"
@@ -100,11 +112,11 @@
             android:layout_marginStart="8dp" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_start"
-        android:layout_width="100dp"
-        android:text="Start"
+        android:id="@+id/btn_start_attendance"
+        android:layout_width="140dp"
+        android:text="@string/start_attendance"
         android:textAllCaps="false"
-        android:backgroundTint="@color/soft_green"
+        android:backgroundTint="@color/forest_green"
         android:layout_gravity="end|center"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
@@ -394,11 +406,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:text="Total Race Attandee"
+            android:text="@string/total_attendee"
             android:textStyle="bold"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:textColor="@color/Text_color"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"/>
@@ -407,7 +419,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:layout_gravity="center"
             android:textColor="@color/Text_color"
             app:layout_constraintTop_toBottomOf="@+id/tv_total_attande_heading"
@@ -438,11 +450,11 @@
             android:id="@+id/tv_batch_no_heading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="18dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:layout_marginTop="8dp"
-            android:text="Current Batch No"
-            android:textSize="16sp"
+            android:text="@string/current_attendee"
+            android:textSize="12sp"
             android:textStyle="bold"
             android:textColor="@color/Text_color"
             app:layout_constraintTop_toTopOf="parent"
@@ -451,9 +463,8 @@
             android:id="@+id/total_batch_no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginTop="4dp"
-            android:textSize="16sp"
+            android:textSize="12sp"
             android:layout_gravity="center"
             android:textColor="@color/Text_color"
             app:layout_constraintTop_toBottomOf="@+id/tv_batch_no_heading"
@@ -462,23 +473,83 @@
 
             </LinearLayout>
             </androidx.cardview.widget.CardView>
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="wrap_content"
+                android:layout_height="60dp"
+                app:cardCornerRadius="4dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp"
+                android:backgroundTint="@color/white"
+                app:cardElevation="4dp"
+                app:layout_constraintBottom_toBottomOf="@+id/card_bpet2"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/card_bpet3">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_marginEnd="18dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Current Batch"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/Text_color"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintStart_toEndOf="@+id/card_bpet2"/>
+                    <TextView
+                        android:id="@+id/tv_current_batch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textSize="12sp"
+                        android:layout_gravity="center"
+                        android:textColor="@color/Text_color"
+                        app:layout_constraintTop_toBottomOf="@+id/tv_batch_no_heading"
+                        app:layout_constraintEnd_toEndOf="@+id/tv_batch_no_heading"
+                        app:layout_constraintStart_toStartOf="@+id/tv_batch_no_heading"/>
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_save"
-        android:layout_width="match_parent"
-        android:text="Save"
-        android:textAllCaps="false"
-        android:backgroundTint="@color/soft_green"
-        android:layout_gravity="end"
-        android:layout_marginEnd="18dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:visibility="visible"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/ll1"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_start"
+                    android:layout_width="120dp"
+                    android:text="Start Race"
+                    android:textAllCaps="false"
+                    android:gravity="center"
+                    android:backgroundTint="@color/forest_green"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_height="wrap_content" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_save"
+                    android:layout_width="120dp"
+                    android:text="Save"
+                    android:textAllCaps="false"
+                    android:backgroundTint="@color/soft_green"
+                    android:layout_gravity="end"
+                    android:layout_marginEnd="18dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:visibility="visible"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/ll1"/>
+            </LinearLayout>
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 
