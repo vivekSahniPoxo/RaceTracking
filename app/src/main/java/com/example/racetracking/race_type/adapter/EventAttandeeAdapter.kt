@@ -111,5 +111,16 @@ class EventAttandeeAdapter(private val mList: MutableList<RaceRegsModel.RaceRegs
     }
 
 
+//    fun changeBackgroundColor(rfidNumberToChange: String, colorResId: Int) {
+//        val positionToChange = mList.indexOfFirst { it.chestNumber == rfidNumberToChange }
+//        if (positionToChange != -1) {
+//            // Update the background color for the specific RFID number
+//            mList[positionToChange].backgroundColorResId = colorResId
+//            notifyItemChanged(positionToChange)
+//        }
+//    }
+
+
+
 
 }

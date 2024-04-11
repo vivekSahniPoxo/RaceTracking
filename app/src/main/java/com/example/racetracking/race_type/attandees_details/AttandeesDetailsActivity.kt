@@ -14,6 +14,7 @@ import com.example.racetracking.race_type.RaceTypeActivity
 import com.example.racetracking.race_type.adapter.EventAttandeeAdapter
 import com.example.racetracking.race_type.data.PostRaceResultItelItem
 import com.example.racetracking.race_type.data.RaceRegsModel
+import com.example.racetracking.utils.Cons
 import com.google.android.material.snackbar.Snackbar
 
 class AttandeesDetailsActivity : AppCompatActivity(),onItemPositionListenr {
@@ -30,7 +31,11 @@ class AttandeesDetailsActivity : AppCompatActivity(),onItemPositionListenr {
 
 
         binding.imBack.setOnClickListener {
+
             val intent = Intent(this, RaceTypeActivity::class.java)
+            val bundle = Bundle()
+              bundle.putBoolean(Cons.ISCOMMINGFROMTOTALATTENDEE,true)
+            intent.putExtras(bundle)
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
             finish()

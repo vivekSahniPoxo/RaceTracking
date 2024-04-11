@@ -11,7 +11,6 @@ import android.media.AudioManager
 import android.media.SoundPool
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
-import android.text.TextUtils
 import android.util.Log
 import android.view.*
 import android.view.animation.AlphaAnimation
@@ -20,47 +19,37 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
-import com.example.racetracking.Dashboard.HomeActivity
 import com.example.racetracking.R
-import com.example.racetracking.bpet.adapter.BPETAdapter
 import com.example.racetracking.bpet.adapter.TwoPointSevenFiveAdapter
 import com.example.racetracking.bpet.datamodel.*
 import com.example.racetracking.databinding.ActivitySeventyFiveMeterRaceBinding
 import com.example.racetracking.localdatabase.EventDao
 import com.example.racetracking.localdatabase.EventDataBase
-import com.example.racetracking.ppt.PActivity
 import com.example.racetracking.race_type.viewModel.RaceTypeViewMode
 import com.example.racetracking.retrofit.RetrofitClient
 import com.example.racetracking.utils.App
 import com.example.racetracking.utils.Cons
-import com.example.racetracking.utils.PopItemAnimator
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.speedata.libuhf.IUHFService
 import com.speedata.libuhf.UHFManager
 import com.speedata.libuhf.bean.SpdInventoryData
 import com.speedata.libuhf.interfaces.OnSpdInventoryListener
-import com.speedata.libuhf.utils.ErrorStatus
-import com.speedata.libuhf.utils.StringUtils
 import kotlinx.android.synthetic.main.quite_dialog.view.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
-import kotlin.ConcurrentModificationException
 import kotlin.collections.ArrayList
 
-class SeventyFiveMeterRace : AppCompatActivity() {
+class BPETRACE : AppCompatActivity() {
     val processedGroupSet = mutableSetOf<Pair<String, Int>>()
     lateinit var binding:ActivitySeventyFiveMeterRaceBinding
     var isInventoryRunning = false
@@ -359,7 +348,7 @@ class SeventyFiveMeterRace : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BUTTON_R2 || keyCode==131) {
         if (!isInventoryRunning) {
-            val dataBase = EventDataBase.getDatabase(this@SeventyFiveMeterRace)
+            val dataBase = EventDataBase.getDatabase(this@BPETRACE)
             val eventDao = dataBase.EventDao()
             startSearching()
 
@@ -370,7 +359,7 @@ class SeventyFiveMeterRace : AppCompatActivity() {
                 override fun getInventoryData(var1: SpdInventoryData) {
                     try {
 
-                        rfidNo = var1.getEpc()
+                        rfidNo = var1.getEpc().substring(0,4)
                         Log.d("RFFFF", rfidNo)
 
 
@@ -676,7 +665,7 @@ class SeventyFiveMeterRace : AppCompatActivity() {
                     adapter.clearData()
                     twoPointSevenFiveAdapter.clearData()
                     twoPointSevenFiveAdapter.notifyDataSetChanged()
-                    Toast.makeText(this@SeventyFiveMeterRace,response.body().toString(),Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@BPETRACE,response.body().toString(),Toast.LENGTH_SHORT).show()
                 } else if (response.code()==404){
                     Snackbar.make(binding.root,response.body().toString(), Snackbar.LENGTH_SHORT).show()
                 } else if (response.code()==400){
@@ -687,7 +676,7 @@ class SeventyFiveMeterRace : AppCompatActivity() {
             }
 
             override fun onFailure(call: Call<String>, t: Throwable) {
-                Toast.makeText(this@SeventyFiveMeterRace,t.localizedMessage,Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@BPETRACE,t.localizedMessage,Toast.LENGTH_SHORT).show()
             }
 
         })

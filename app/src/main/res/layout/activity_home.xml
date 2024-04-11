@@ -24,27 +24,26 @@
             android:visibility="gone"
             android:background="@drawable/ic_baseline_arrow_back_24"/>
 
-        <TextView
-            android:layout_width="wrap_content"
+        <ImageView
+            android:layout_width="120dp"
             android:layout_height="wrap_content"
-            android:text="Home"
-            android:textColor="@color/black"
-            android:textStyle="bold"
-            android:layout_marginStart="32dp"
-            android:textSize="16sp"/>
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_collip"
+            />
         <ImageView
             android:id="@+id/btn_synce_data"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginStart="155dp"
+            android:layout_marginStart="120dp"
             android:layout_marginBottom="8dp"
-            android:background="@drawable/upload"
+            android:background="@drawable/push"
             android:textColor="@color/white" />
 
         <ImageView
+            android:id="@+id/im_sync"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:background="@drawable/shutdown"
+            android:background="@drawable/sync"
             android:layout_marginEnd="18dp"
             android:layout_gravity="end"/>
     </com.google.android.material.appbar.MaterialToolbar>
@@ -64,15 +63,134 @@
             android:orientation="vertical">
 
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:text="Army Physical Test Monitor"/>
 
-        <LinearLayout
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="24sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:textColor="@color/black"
+                android:text="(APTM)"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/race_type"
+                    android:layout_width="160dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginEnd="18dp"
+                    android:layout_marginBottom="4dp"
+                    app:cardCornerRadius="8dp"
+                    android:visibility="visible"
+                    android:backgroundTint="@color/white"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            android:background="@drawable/start_race"
+                            android:layout_marginTop="12dp"
+                            android:layout_gravity="center"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Race Start"
+                            android:layout_marginTop="8dp"
+                            android:layout_gravity="center"
+                            android:textColor="@color/black"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/race_sprint"
+                    android:layout_width="160dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="2dp"
+                    android:layout_marginEnd="18dp"
+                    android:layout_marginBottom="4dp"
+                    app:cardCornerRadius="8dp"
+                    android:visibility="visible"
+                    android:backgroundTint="@color/white"
+                    app:cardElevation="4dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            android:background="@drawable/sprint_race"
+                            android:layout_marginTop="12dp"
+                            android:layout_gravity="center"/>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Race Sprint"
+                            android:layout_marginTop="8dp"
+                            android:layout_gravity="center"
+                            android:textColor="@color/black"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
+
+
+
+            </LinearLayout>
+
+
+
+            <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
             <androidx.cardview.widget.CardView
                 android:id="@+id/card_bpet"
                 android:layout_width="160dp"
-                android:layout_height="140dp"
+                android:layout_height="120dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginStart="12dp"
                 android:layout_marginEnd="18dp"
@@ -86,8 +204,8 @@
                     android:layout_height="match_parent"
                     android:orientation="vertical">
                     <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
                         android:background="@drawable/bpet"
                         android:layout_marginTop="12dp"
                         android:layout_gravity="center"/>
@@ -115,7 +233,7 @@
             <androidx.cardview.widget.CardView
                 android:id="@+id/card_ppt"
                 android:layout_width="160dp"
-                android:layout_height="140dp"
+                android:layout_height="120dp"
                 android:layout_marginTop="16dp"
 
                 android:layout_marginBottom="4dp"
@@ -128,9 +246,9 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
     <ImageView
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:background="@drawable/examination"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:background="@drawable/ppt"
         android:layout_marginTop="12dp"
         android:layout_gravity="center"/>
 
@@ -358,62 +476,65 @@
 
         </LinearLayout>
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
 
-            <androidx.cardview.widget.CardView
-                android:id="@+id/race_type"
-                android:layout_width="160dp"
-                android:layout_height="140dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="18dp"
-                android:layout_marginBottom="4dp"
-                app:cardCornerRadius="8dp"
-                android:visibility="visible"
-                android:backgroundTint="@color/white"
-                app:cardElevation="4dp">
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/m_cross_country_card"
+                    android:layout_width="160dp"
+                    android:layout_height="120dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginEnd="18dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_marginBottom="4dp"
+                    app:cardCornerRadius="8dp"
+                    android:visibility="visible"
+                    android:backgroundTint="@color/white"
+                    app:cardElevation="4dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
 
-                    <ImageView
-                        android:layout_width="80dp"
-                        android:layout_height="80dp"
-                        android:background="@drawable/running"
-                        android:layout_marginTop="12dp"
-                        android:layout_gravity="center"/>
+                        <ImageView
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            android:background="@drawable/cross_country"
+                            android:layout_marginTop="12dp"
+                            android:layout_gravity="center"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Race Start"
-                        android:layout_marginTop="8dp"
-                       android:layout_gravity="center"
-                        android:textColor="@color/black"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"/>
-
-
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Cross Country"
+                            android:layout_marginTop="8dp"
+                            android:layout_gravity="center"
+                            android:textColor="@color/black"
+                            android:textStyle="bold"
+                            android:textSize="18sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent"/>
 
 
-                </LinearLayout>
 
-            </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
 
                 <androidx.cardview.widget.CardView
-                    android:id="@+id/race_sprint"
+                    android:id="@+id/m_report_card"
                     android:layout_width="160dp"
-                    android:layout_height="140dp"
+                    android:layout_height="120dp"
                     android:layout_marginTop="16dp"
+
                     android:layout_marginEnd="18dp"
                     android:layout_marginBottom="4dp"
                     app:cardCornerRadius="8dp"
@@ -427,16 +548,16 @@
                         android:orientation="vertical">
 
                         <ImageView
-                            android:layout_width="80dp"
-                            android:layout_height="80dp"
-                            android:background="@drawable/running"
+                            android:layout_width="70dp"
+                            android:layout_height="70dp"
+                            android:background="@drawable/reports"
                             android:layout_marginTop="12dp"
                             android:layout_gravity="center"/>
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="Race Sprint"
+                            android:text="Reports"
                             android:layout_marginTop="8dp"
                             android:layout_gravity="center"
                             android:textColor="@color/black"
@@ -454,6 +575,51 @@
                 </androidx.cardview.widget.CardView>
 
             </LinearLayout>
+            <androidx.cardview.widget.CardView
+                android:id="@+id/card_setting"
+                android:layout_width="160dp"
+                android:layout_height="120dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="18dp"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="4dp"
+                app:cardCornerRadius="8dp"
+                android:visibility="visible"
+                android:backgroundTint="@color/white"
+                app:cardElevation="4dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="70dp"
+                        android:layout_height="70dp"
+                        android:background="@drawable/ipconfig"
+                        android:layout_marginTop="12dp"
+                        android:layout_gravity="center"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Change BaseURL"
+                        android:layout_marginTop="8dp"
+                        android:layout_gravity="center"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"/>
+
+
+
+
+                </LinearLayout>
+
+            </androidx.cardview.widget.CardView>
+
 
         </LinearLayout>
     </ScrollView>

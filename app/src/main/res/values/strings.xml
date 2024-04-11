@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RaceTracking</string>
+    <string name="app_name">APTM_Demo</string>
     <string name="application_view_as_soldier_recruit_trained_soldier">Application View as Soldier/Recruit/Trained Soldier</string>
     <string name="event_type">Event Type:</string>
     <string name="bpet_5km_race">BPET, 5km Race</string>
@@ -31,4 +31,12 @@
     <string name="starttime">StartTime</string>
     <string name="battle_physical_efficiency_test">Battle Physical Efficiency Test</string>
     <string name="physical_test_physical_proficiency_tests">Physical Proficiency Tests</string>
+    <string name="v_rope">V-Rope</string>
+    <string name="h_rope">H-Rope</string>
+    <string name="start_attendance">Start Attendance</string>
+    <string name="total_attendee">Total Attendee</string>
+    <string name="current_attendee">Current Attendee</string>
+    <string name="total_pass">Total Pass</string>
+    <string name="create_batch">Create Batch</string>
+    <string name="total_count">Total Count</string>
 </resources>

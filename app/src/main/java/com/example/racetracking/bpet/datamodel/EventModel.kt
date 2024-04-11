@@ -11,3 +11,7 @@ class EventModel : ArrayList<EventModel.EventModelItem>(){
         val eventName: String
     )
 }
+
+
+
+

@@ -12,24 +12,25 @@ import android.media.SoundPool
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.util.Log
-import android.view.GestureDetector
-import android.view.KeyEvent
-import android.view.MotionEvent
-import android.view.Window
+import android.view.*
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.example.racetracking.Dashboard.HomeActivity
 import com.example.racetracking.R
 import com.example.racetracking.bpet.adapter.TwoPointSevenFiveAdapter
 import com.example.racetracking.bpet.adapter.UpdateMidPointAdapter
-import com.example.racetracking.bpet.datamodel.Rfid
-import com.example.racetracking.bpet.datamodel.SubmitEvent
-import com.example.racetracking.bpet.datamodel.UpdateMidPoint
-import com.example.racetracking.bpet.datamodel.UpdateMidTimeModelItem
+import com.example.racetracking.bpet.datamodel.*
 import com.example.racetracking.databinding.ActivityUpdateMidTimeBinding
+import com.example.racetracking.localdatabase.EventDataBase
+import com.example.racetracking.race_type.viewModel.RaceTypeViewMode
 import com.example.racetracking.retrofit.RetrofitClient
 import com.example.racetracking.utils.App
+import com.example.racetracking.utils.convertToFormattedTime
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import com.speedata.libuhf.IUHFService
@@ -58,6 +59,7 @@ class UpdateMidTimeActivity : AppCompatActivity() {
     lateinit var rfidList:ArrayList<UpdateMidPoint>
     lateinit var tempList:ArrayList<String>
     lateinit var submitItem:ArrayList<UpdateMidTimeModelItem>
+    lateinit var tempSubmitItem:ArrayList<UpdateMidTimeModelItem>
     var isPassed = ""
     var rfidNo = ""
     private var soundId = 0
@@ -66,6 +68,9 @@ class UpdateMidTimeActivity : AppCompatActivity() {
     lateinit var dialog:Dialog
     private var isDialogShowing = false
     lateinit var twoPointSevenFiveAdapter: UpdateMidPointAdapter
+    private val updateMidTimeViewModel: RaceTypeViewMode by viewModels()
+    private val eventsViewModel: RaceTypeViewMode by viewModels()
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +79,7 @@ class UpdateMidTimeActivity : AppCompatActivity() {
         rfidList = arrayListOf()
         tempList = arrayListOf()
         submitItem = arrayListOf()
+        tempSubmitItem =  arrayListOf()
         handler = Handler()
         twoPointSevenFiveAdapter = UpdateMidPointAdapter(rfidList)
         iuhfService = UHFManager.getUHFService(this)
@@ -126,9 +132,25 @@ class UpdateMidTimeActivity : AppCompatActivity() {
         val receivedBundle = receivedIntent.extras
 
         binding.btnSubmit.setOnClickListener {
-            Log.d("submitEvent",submitItem.toString())
+            //Log.d("submitEvent",submitItem.toString())
             if (submitItem.isNotEmpty()) {
-                submitEvent(submitItem)
+                //submitEvent(submitItem)
+                tempSubmitItem.forEach {
+                     updateMidTimeViewModel.addMidOrTurningPoint(
+                         UpdateMidTimeModelLocalDb(0, it.chestNo, it.midtime)
+                     )
+
+                    eventsViewModel.tempMidOrTurningPoint(tempMidOrTurningPoint(0,it.chestNo,it.midtime))
+                 }
+
+                rfidList.clear()
+                tempList.clear()
+                submitItem.clear()
+                binding.count.text = ""
+                val adapter = UpdateMidPointAdapter(rfidList)
+                binding.listOfItem.adapter = adapter
+                adapter.clearData()
+                twoPointSevenFiveAdapter.notifyDataSetChanged()
             } else{
                 Toast.makeText(this, "No item found for submit",Toast.LENGTH_SHORT).show()
             }
@@ -199,6 +221,18 @@ class UpdateMidTimeActivity : AppCompatActivity() {
     fun  startSearching(){
         isInventoryRunning = true
         initSoundPool()
+
+        runOnUiThread(kotlinx.coroutines.Runnable {
+            binding.blinkingDot.isVisible = true
+
+            val blinkAnimation = AlphaAnimation(1.0f, 0.0f)
+            blinkAnimation.duration = 500 // Adjust the duration as needed
+            blinkAnimation.repeatMode = Animation.REVERSE
+            blinkAnimation.repeatCount = Animation.INFINITE
+
+            // Start the animation
+            binding.blinkingDot.startAnimation(blinkAnimation)
+        })
         try {
             iuhfService = UHFManager.getUHFService(this)
             iuhfService.openDev()
@@ -222,6 +256,11 @@ class UpdateMidTimeActivity : AppCompatActivity() {
         isInventoryRunning = false
         iuhfService.inventoryStop()
         iuhfService.closeDev()
+        runOnUiThread(kotlinx.coroutines.Runnable {
+            val blinkingDot = binding.blinkingDot
+            blinkingDot.clearAnimation()
+            blinkingDot.visibility = View.GONE
+        })
     }
 
     fun initSoundPool() {
@@ -244,6 +283,8 @@ class UpdateMidTimeActivity : AppCompatActivity() {
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_BUTTON_R2 || keyCode == KeyEvent.KEYCODE_F1) {
         if (!isInventoryRunning) {
+            val dataBase = EventDataBase.getDatabase(this@UpdateMidTimeActivity)
+            val eventDao = dataBase.EventDao()
             startSearching()
 
             // Start inventory service
@@ -260,31 +301,43 @@ class UpdateMidTimeActivity : AppCompatActivity() {
                         lastTimeMillis = System.currentTimeMillis()
                         soundPool!!.play(soundId, 1f, 1f, 0, 0, 1f)
                         Log.d("RFFFF", var1.getEpc())
-                        rfidNo = var1.getEpc()
+                        rfidNo = var1.getEpc().substring(0,4)
 
                         if (rfidNo!=null) {
                             if (!tempList.contains(rfidNo)) {
                                 tempList.add(rfidNo)
-                                rfidList.add(UpdateMidPoint(getCurrentTime().toString(), rfidNo))
+                                rfidNo = var1.getEpc().substring(0,4)
+                                val getChestNumber = eventDao.getUpdateMidPointRfidNumber(rfidNo)
+                                try {
+                                    if (getChestNumber==null){
+                                        rfidList.add(
+                                            UpdateMidPoint(
+                                                getCurrentTime().toString(),
+                                                rfidNo
+                                            )
+                                        )
+                                    } else {
 
-                                rfidNo = var1.getEpc()
-                                val localDateTime = LocalDateTime.now() // Replace with your LocalDateTime object
+                                    }
+                                } catch (e:Exception){
+                                    e.printStackTrace()
+
+                                }
+
+
+                                val localDateTime = LocalDateTime.now()
                                 val formattedDate2 = formatLocalDateTime(localDateTime)
-                                submitItem.add(UpdateMidTimeModelItem(var1.getEpc(),formattedDate2))
+                                tempSubmitItem.add(UpdateMidTimeModelItem(rfidNo,localDateTime.toString()))
+                                submitItem.add(UpdateMidTimeModelItem(var1.getEpc().substring(0,4),formattedDate2))
+
                                 runOnUiThread {
 
                                     binding.listOfItem.postDelayed({
                                        // binding.listOfItem.scrollToPosition(twoPointSevenFiveAdapter.itemCount - 1)
                                         binding.listOfItem.scrollToPosition(rfidList.size)
                                     }, 100)
-                                    binding.count.text = tempList.size.toString()
+                                    binding.count.text = rfidList.size.toString()
                                 }
-                               // val twoPointSevenFiveAdapter = UpdateMidPointAdapter(rfidList)
-//                                val itemPosition = twoPointSevenFiveAdapter.getPositionOfItem(rfidNo)
-//                                if (itemPosition != RecyclerView.NO_POSITION) {
-//                                    twoPointSevenFiveAdapter.notifyItemChanged(itemPosition)
-//                                }
-                              //  binding.listOfItem.adapter = twoPointSevenFiveAdapter
 
                                 twoPointSevenFiveAdapter.notifyDataSetChanged()
 

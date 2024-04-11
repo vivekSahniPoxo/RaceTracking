@@ -7,18 +7,22 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.lifecycle.lifecycleScope
+import androidx.room.Room
 import com.example.racetracking.Dashboard.HomeActivity
-import com.example.racetracking.R
-import com.example.racetracking.bpet.SeventyFiveMeterRace
 import com.example.racetracking.bpet.adapter.BPETAdapter
 import com.example.racetracking.bpet.clickklistnerinterface.OnItemClickListener
 import com.example.racetracking.bpet.datamodel.EventModel
 import com.example.racetracking.databinding.ActivityPactivityBinding
-import com.example.racetracking.ppt.hundredmtrrace.HundredMeterRaceActivity
+import com.example.racetracking.localdatabase.EventDataBase
+import com.example.racetracking.sprint.race_sprint_activity.HundredMeterRaceActivity
 import com.example.racetracking.retrofit.RetrofitClient
 import com.example.racetracking.utils.App
 import com.example.racetracking.utils.Cons
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -35,7 +39,34 @@ class PActivity : AppCompatActivity(),OnItemClickListener {
         setContentView(binding.root)
         mList = arrayListOf()
         bpetAdapter = BPETAdapter(mList,this)
-        getEventData()
+        //getEventData()
+        if (mList.isNotEmpty()){
+            mList.clear()
+        }
+
+        val database = Room.databaseBuilder(this@PActivity, EventDataBase::class.java, "ArmyEventDataBase").build()
+        lifecycleScope.launch {
+            try {
+                val data = withContext(Dispatchers.IO) {
+                    database.EventDao().getAllPPTEvent()
+                }
+
+                withContext(Dispatchers.Main) {
+                    data.forEach {
+                        mList.add(EventModel.EventModelItem(it.eventId, it.eventName))
+                    }
+
+                    bpetAdapter = BPETAdapter(mList, this@PActivity)
+                    binding.recyclerView.adapter = bpetAdapter
+                    bpetAdapter.notifyDataSetChanged()
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@PActivity, "No data found", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
 
         binding.imBack.setOnClickListener {
             val intent = Intent(this, HomeActivity::class.java)

@@ -34,6 +34,18 @@
             android:textSize="16sp"/>
 
 
+        <ImageView
+            android:id="@+id/blinkingDot"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="•"
+            android:background="@drawable/ic_green_dot"
+            android:layout_marginEnd="18dp"
+            android:layout_gravity="end|center"
+            android:textSize="38sp"
+            android:visibility="gone"
+            android:textColor="@color/green2" />
+
     </com.google.android.material.appbar.MaterialToolbar>
 
     <androidx.cardview.widget.CardView
@@ -125,7 +137,7 @@
                     app:cardCornerRadius="8dp"
                     android:backgroundTint="@color/white"
                     app:cardElevation="4dp"
-                    android:visibility="visible"
+                    android:visibility="gone"
                     app:layout_constraintTop_toTopOf="@+id/tool_bar"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent">
@@ -192,7 +204,7 @@
         android:layout_width="200dp"
         android:layout_height="40dp"
         android:layout_marginTop="8dp"
-        android:src="@drawable/logo"
+        android:src="@drawable/ic_collip"
         android:layout_gravity="center"
         android:layout_marginBottom="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
