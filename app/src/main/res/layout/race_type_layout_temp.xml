@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+
+
+<TableLayout
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content">
+
+    <TableRow>
+        <TextView
+            android:id="@+id/tvName"
+             android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_gender"
+             android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Password:"
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/tv_dob"
+             android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Pas111"
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/army_number"
+             android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="Pas111"
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+        <TextView
+            android:id="@+id/soldireType"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="xxxx"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+        <TextView
+            android:id="@+id/unit_value"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="xxxx"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+        <TextView
+            android:id="@+id/company_value"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="xxxx"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+        <TextView
+            android:id="@+id/start_time"
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:text="xxxx"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:textColor="@color/black" />
+    </TableRow>
+    
+</TableLayout>
+</HorizontalScrollView>

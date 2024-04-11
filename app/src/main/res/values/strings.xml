@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">RaceTracking</string>
+    <string name="application_view_as_soldier_recruit_trained_soldier">Application View as Soldier/Recruit/Trained Soldier</string>
+    <string name="event_type">Event Type:</string>
+    <string name="bpet_5km_race">BPET, 5km Race</string>
+    <string name="clear">Clear</string>
+    <string name="fail">Fail</string>
+    <string name="pass">Pass</string>
+    <string name="_5meter_suttle">5Meter Suttle</string>
+    <string name="chin_ups_push_ups">Chin Ups/Push ups</string>
+    <string name="sit_ups">Sit Ups</string>
+    <string name="toe_touch">Toe Touch</string>
+    <string name="turning_point">Turning Point</string>
+    <string name="submit">Submit</string>
+    <string name="ppt">PPT</string>
+    <string name="write_fail">Write Failed</string>
+    <string name="read_fail">Read Failed</string>
+    <string name="set_lock">Lock</string>
+    <string name="set_epc">EPC</string>
+    <string name="set_password">Password</string>
+    <string name="dialog_module_none">Module does not exist</string>
+    <string name="low_power">Low power UHF is forbidden</string>
+    <string name="high_temp">High temperature UHF is forbidden</string>
+    <string name="SetRace">SetRace</string>
+    <string name="name">Name</string>
+    <string name="gender">Gender</string>
+    <string name="dob">Dob</string>
+    <string name="armynumber">ArmyN0</string>
+    <string name="soldier">Soldier</string>
+    <string name="unit_value">Unit Value</string>
+    <string name="starttime">StartTime</string>
+    <string name="battle_physical_efficiency_test">Battle Physical Efficiency Test</string>
+    <string name="physical_test_physical_proficiency_tests">Physical Proficiency Tests</string>
+</resources>
